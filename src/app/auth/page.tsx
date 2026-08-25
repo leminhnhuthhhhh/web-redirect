@@ -15,37 +15,75 @@ function getCookie(name: string): string | null {
 }
 
 export default function Page() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [redirectStatus, setRedirectStatus] = useState<"idle" | "redirecting" | "failed">("idle");
 
   useEffect(() => {
-    // Kiểm tra xem đã có cookie session trước đó chưa
-    const savedSession = getCookie("mock_sso_session");
+    try {
+      // Kiểm tra xem đã có cookie session trước đó chưa
+      const savedSession = getCookie("mock_sso_session");
 
-    if (savedSession) {
-      // LẦN SAU (hoặc trong vòng 2 phút): Đã có session, tự động redirect ngay lập tức
-      window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
-    } else {
-      // LẦN ĐẦU (hoặc đã hết hạn sau 2 phút): Chưa có session, hiển thị form login
-      setIsLoggedIn(false);
+      if (savedSession) {
+        // LẦN SAU: Đã có session, tự động redirect ngay lập tức
+        setRedirectStatus("redirecting");
+        
+        // Cài đặt timeout, nếu sau 3 giây vẫn ở trang này tức là không mở được app
+        const timer = setTimeout(() => {
+          setRedirectStatus("failed");
+        }, 3000);
+
+        window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
+        
+        return () => clearTimeout(timer);
+      }
+      // Nếu chưa có session thì giữ nguyên trạng thái "idle" (hiện form)
+    } catch (e) {
+      console.error("Lỗi khi kiểm tra session:", e);
     }
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Lưu cookie có thời hạn 2 phút (120 giây)
-    setCookie("mock_sso_session", "true", 120);
+    try {
+      // Lưu cookie có thời hạn 2 phút (120 giây)
+      setCookie("mock_sso_session", "true", 120);
+      
+      setRedirectStatus("redirecting");
+      
+      const timer = setTimeout(() => {
+        setRedirectStatus("failed");
+      }, 3000);
 
-    // Chuyển hướng về app kèm token
-    window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
+      // Chuyển hướng về app kèm token
+      window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
+    } catch (e) {
+      console.error("Lỗi khi đăng nhập:", e);
+    }
   };
 
-  // Tránh bị chớp màn hình form login trong lúc useEffect đang check cookie
-  if (isLoggedIn === null) {
-    return <div style={{ padding: 20 }}>Đang kiểm tra phiên đăng nhập...</div>;
+  if (redirectStatus === "failed") {
+    return (
+      <div style={{ padding: 20, fontFamily: "sans-serif", textAlign: "center" }}>
+        <h3 style={{ color: "red" }}>Không thể mở ứng dụng</h3>
+        <p>Có vẻ như ứng dụng gmosign chưa được cài đặt trên thiết bị này, hoặc trình duyệt chặn mở ứng dụng.</p>
+        <button 
+          onClick={() => {
+            setCookie("mock_sso_session", "", -1); // Xóa cookie
+            window.location.reload();
+          }}
+          style={{ padding: "10px 16px", backgroundColor: "#0E71EB", color: "#fff", border: "none", cursor: "pointer", borderRadius: 4 }}
+        >
+          Xóa phiên và thử lại
+        </button>
+      </div>
+    );
   }
 
-  // LẦN ĐẦU / HẾT HẠN: Hiển thị form đăng nhập giả lập
+  if (redirectStatus === "redirecting") {
+    return <div style={{ padding: 20, fontFamily: "sans-serif" }}>Đang chuyển hướng về ứng dụng...</div>;
+  }
+
+  // TRẠNG THÁI IDLE: Hiển thị form đăng nhập giả lập (không cần chờ check xong JS)
   return (
     <div style={{ padding: 40, fontFamily: "sans-serif", maxWidth: 400, margin: "0 auto" }}>
       <h2>Mock SSO Login (Zoom/SAML)</h2>
