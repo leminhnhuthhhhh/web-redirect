@@ -31,9 +31,17 @@ export default function Page() {
           setRedirectStatus("failed");
         }, 3000);
 
-        window.location.href = "gmosign://app/saml/mobileApp?tokenId=581";
+        // Giả lập thao tác click vào thẻ a để vượt cơ chế block của Safari
+        const a = document.createElement("a");
+        a.href = "gmosign://app/saml/mobileApp?tokenId=581";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
         
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(timer);
+          if (document.body.contains(a)) document.body.removeChild(a);
+        };
       }
       // Nếu chưa có session thì giữ nguyên trạng thái "idle" (hiện form)
     } catch (e) {
@@ -54,8 +62,16 @@ export default function Page() {
         setRedirectStatus("failed");
       }, 3000);
 
-      // Chuyển hướng về app kèm token bằng location.href (an toàn hơn replace đối với deeplink trên iOS)
-      window.location.href = "gmosign://app/saml/mobileApp?tokenId=581";
+      // Giả lập click thẻ a để mở app an toàn trên iOS
+      const a = document.createElement("a");
+      a.href = "gmosign://app/saml/mobileApp?tokenId=581";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        if (document.body.contains(a)) document.body.removeChild(a);
+      }, 500);
     } catch (e) {
       console.error("Lỗi khi đăng nhập:", e);
     }
