@@ -23,7 +23,7 @@ export default function Page() {
 
     if (savedSession) {
       // LẦN SAU (hoặc trong vòng 2 phút): Đã có session, tự động redirect ngay lập tức
-      window.location.replace("myapp://callback?token=1");
+      window.location.replace("myapp:///saml/mobileApp?tokenId=581");
     } else {
       // LẦN ĐẦU (hoặc đã hết hạn sau 2 phút): Chưa có session, hiển thị form login
       setIsLoggedIn(false);
@@ -37,7 +37,7 @@ export default function Page() {
     setCookie("mock_sso_session", "true", 120);
 
     // Chuyển hướng về app kèm token
-    window.location.replace("myapp://agreeapp/saml/mobileApp?tokenId=581");
+    window.location.replace("myapp:///saml/mobileApp?tokenId=581");
   };
 
   // Tránh bị chớp màn hình form login trong lúc useEffect đang check cookie
