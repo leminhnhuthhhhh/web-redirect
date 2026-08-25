@@ -87,12 +87,6 @@ export default function Page() {
       <p style={{ fontSize: 12, color: "#666", marginTop: 16 }}>
         * Cookie này sẽ tự động hết hạn sau <b>2 phút</b>. Sau 2 phút, nếu mở lại trang này, bạn sẽ phải đăng nhập lại từ đầu.
       </p>
-      <a 
-        href="gmosign://app/saml/mobileApp?tokenId=581"
-        style={{ display: "inline-block", marginTop: 20, padding: "12px 24px", backgroundColor: "#0E71EB", color: "#fff", textDecoration: "none", borderRadius: 4, fontWeight: "bold" }}
-      >
-        Mở ứng dụng GMOSign
-      </a>
     </div>
   );
 }
