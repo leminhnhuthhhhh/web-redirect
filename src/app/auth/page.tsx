@@ -1,54 +1,31 @@
-"use client";
+import { cookies } from "next/headers";
 
-import { useEffect, useState } from "react";
+export default async function Page() {
+  const cookieStore = await cookies();
+  const savedSession = cookieStore.get("mock_sso_session");
 
-function getCookie(name: string): string | null {
-  try {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-export default function Page() {
-  const [hasSession, setHasSession] = useState(false);
-
-  useEffect(() => {
-    // Chỉ dùng JS để check session cho lần mở lại (auto-redirect)
-    // Nếu JS crash trên iOS 15, form vẫn hoạt động vì dùng action HTML thuần
-    try {
-      const savedSession = getCookie("mock_sso_session");
-      if (savedSession) {
-        setHasSession(true);
-        window.location.href = "gmosign://app/saml/mobileApp?tokenId=581";
-      }
-    } catch {
-      // JS crash -> form HTML thuần vẫn hoạt động
-    }
-  }, []);
-
-  // Nếu đã có session, hiển thị trang chuyển hướng với nút bấm thủ công
-  if (hasSession) {
+  // Nếu đã có session → render trang auto-redirect (không cần JS)
+  if (savedSession) {
     return (
-      <div style={{ padding: 40, fontFamily: "sans-serif", textAlign: "center" }}>
-        <h3>Đang chuyển hướng về ứng dụng...</h3>
-        <p style={{ color: "#666", fontSize: 14 }}>Nếu ứng dụng không tự động mở, vui lòng bấm vào nút bên dưới:</p>
-        <a 
-          href="gmosign://app/saml/mobileApp?tokenId=581"
-          style={{ display: "inline-block", marginTop: 20, padding: "12px 24px", backgroundColor: "#0E71EB", color: "#fff", textDecoration: "none", borderRadius: 4, fontWeight: "bold" }}
-        >
-          Mở ứng dụng GMOSign
-        </a>
-      </div>
+      <html>
+        <head>
+          <meta httpEquiv="refresh" content="0;url=gmosign://app/saml/mobileApp?tokenId=581" />
+        </head>
+        <body style={{ padding: 40, fontFamily: "sans-serif", textAlign: "center" }}>
+          <h3>Đang chuyển hướng về ứng dụng...</h3>
+          <p style={{ color: "#666", fontSize: 14 }}>Nếu ứng dụng không tự động mở, vui lòng bấm vào nút bên dưới:</p>
+          <a 
+            href="gmosign://app/saml/mobileApp?tokenId=581"
+            style={{ display: "inline-block", marginTop: 20, padding: "12px 24px", backgroundColor: "#0E71EB", color: "#fff", textDecoration: "none", borderRadius: 4, fontWeight: "bold" }}
+          >
+            Mở ứng dụng GMOSign
+          </a>
+        </body>
+      </html>
     );
   }
 
-  // Form đăng nhập — dùng action HTML thuần, KHÔNG phụ thuộc vào JS
-  // Khi submit, trình duyệt sẽ POST thẳng đến /api/auth/login
-  // API route trả về HTML có meta refresh để redirect sang deeplink
+  // Chưa có session → hiển thị form đăng nhập (HTML thuần, không cần JS)
   return (
     <div style={{ padding: 40, fontFamily: "sans-serif", maxWidth: 400, margin: "0 auto" }}>
       <h2>Mock SSO Login (Zoom/SAML)</h2>
