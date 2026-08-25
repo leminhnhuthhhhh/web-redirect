@@ -31,7 +31,7 @@ export default function Page() {
           setRedirectStatus("failed");
         }, 3000);
 
-        window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
+        window.location.href = "gmosign://app/saml/mobileApp?tokenId=581";
         
         return () => clearTimeout(timer);
       }
@@ -54,8 +54,8 @@ export default function Page() {
         setRedirectStatus("failed");
       }, 3000);
 
-      // Chuyển hướng về app kèm token
-      window.location.replace("gmosign://app/saml/mobileApp?tokenId=581");
+      // Chuyển hướng về app kèm token bằng location.href (an toàn hơn replace đối với deeplink trên iOS)
+      window.location.href = "gmosign://app/saml/mobileApp?tokenId=581";
     } catch (e) {
       console.error("Lỗi khi đăng nhập:", e);
     }
@@ -64,23 +64,43 @@ export default function Page() {
   if (redirectStatus === "failed") {
     return (
       <div style={{ padding: 20, fontFamily: "sans-serif", textAlign: "center" }}>
-        <h3 style={{ color: "red" }}>Không thể mở ứng dụng</h3>
-        <p>Có vẻ như ứng dụng gmosign chưa được cài đặt trên thiết bị này, hoặc trình duyệt chặn mở ứng dụng.</p>
-        <button 
-          onClick={() => {
-            setCookie("mock_sso_session", "", -1); // Xóa cookie
-            window.location.reload();
-          }}
-          style={{ padding: "10px 16px", backgroundColor: "#0E71EB", color: "#fff", border: "none", cursor: "pointer", borderRadius: 4 }}
-        >
-          Xóa phiên và thử lại
-        </button>
+        <h3 style={{ color: "red" }}>Không thể tự động mở ứng dụng</h3>
+        <p>Trình duyệt đang chặn mở ứng dụng, hoặc ứng dụng chưa được cài đặt.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 20 }}>
+          <a 
+            href="gmosign://app/saml/mobileApp?tokenId=581"
+            style={{ padding: "10px 16px", backgroundColor: "#0E71EB", color: "#fff", textDecoration: "none", borderRadius: 4, fontWeight: "bold" }}
+          >
+            Thử bấm vào đây để mở App
+          </a>
+          
+          <button 
+            onClick={() => {
+              setCookie("mock_sso_session", "", -1); // Xóa cookie
+              window.location.reload();
+            }}
+            style={{ padding: "8px 16px", backgroundColor: "#f0f0f0", color: "#333", border: "1px solid #ccc", cursor: "pointer", borderRadius: 4, marginTop: 10 }}
+          >
+            Xóa phiên và quay lại
+          </button>
+        </div>
       </div>
     );
   }
 
   if (redirectStatus === "redirecting") {
-    return <div style={{ padding: 20, fontFamily: "sans-serif" }}>Đang chuyển hướng về ứng dụng...</div>;
+    return (
+      <div style={{ padding: 40, fontFamily: "sans-serif", textAlign: "center" }}>
+        <h3>Đang chuyển hướng về ứng dụng...</h3>
+        <p style={{ color: "#666", fontSize: 14 }}>Nếu ứng dụng không tự động mở, vui lòng bấm vào nút bên dưới:</p>
+        <a 
+          href="gmosign://app/saml/mobileApp?tokenId=581"
+          style={{ display: "inline-block", marginTop: 20, padding: "12px 24px", backgroundColor: "#0E71EB", color: "#fff", textDecoration: "none", borderRadius: 4, fontWeight: "bold" }}
+        >
+          Mở ứng dụng GMOSign
+        </a>
+      </div>
+    );
   }
 
   // TRẠNG THÁI IDLE: Hiển thị form đăng nhập giả lập (không cần chờ check xong JS)
