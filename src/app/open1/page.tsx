@@ -37,7 +37,7 @@ export default function Page() {
     setCookie("mock_sso_session", "true", 120);
 
     // Chuyển hướng về app kèm token
-    window.location.replace("myapp://callback?token=mock_token_abc123");
+    window.location.replace("myapp://agreeapp/saml/mobileApp?tokenId=581");
   };
 
   // Tránh bị chớp màn hình form login trong lúc useEffect đang check cookie
